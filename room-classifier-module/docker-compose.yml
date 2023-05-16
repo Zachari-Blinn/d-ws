@@ -2,9 +2,8 @@ version: '3.8'
 services:
   mongo:
     image: mongo:latest
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+    env_file:
+      - .env
     volumes:
       - mongo_data:/data/db
     ports:

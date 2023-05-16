@@ -1,3 +1,4 @@
+from dotenv import load_dotenv
 from pymongo import MongoClient
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
@@ -10,12 +11,11 @@ import os
 import spacy
 import yaml
 
-with open('config.yaml', 'r') as config_file:
-    config = yaml.safe_load(config_file)
+load_dotenv()
 
-MODEL_FILE = os.environ.get('MODEL_FILE', config.get('model_file', 'room_classifier.pkl'))
-DB_NAME = os.environ.get('DB_NAME', config.get('db_name', 'mydatabase'))
-COLLECTION_NAME = os.environ.get('COLLECTION_NAME', config.get('collection_name', 'mycollection'))
+MODEL_FILE = os.getenv('MODEL_FILE')
+DB_NAME = os.getenv('DB_NAME')
+COLLECTION_NAME = os.getenv('COLLECTION_NAME')
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("room_classifier")
