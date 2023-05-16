@@ -4,6 +4,7 @@ from pymongo import MongoClient
 from ultralytics import YOLO
 import cv2
 import os
+import supervision as sv
 
 load_dotenv()
 
@@ -20,20 +21,42 @@ objects_collection = db[COLLECTION_NAME]
 
 def main():
   model = YOLO(MODEL_PATH)
+  CLASS_NAMES_DICT = model.model.names
   camera = cv2.VideoCapture(0)
-  
+  print("Starting camera...")
+  print('Press "q" to quit')
+  print("CLASS_NAMES_DICT: ", CLASS_NAMES_DICT)
   while camera.isOpened():
     success, frame = camera.read()
     
     if success:
-      results = model(frame)
+      results = model(frame)[0]
       
-      cls = results[0].boxes.cls
-      print(cls)
+      detections = sv.Detections(
+        xyxy=results.boxes.xyxy.cpu().numpy(),
+        confidence=results.boxes.conf.cpu().numpy(),
+        class_id=results.boxes.cls.cpu().numpy().astype(int),
+      )
+      
+      detections = detections[detections.confidence > CONFIDENCE_THRESHOLD]
+      
+      box_annotator = sv.BoxAnnotator()
 
-      annotated_frame = results[0].plot()
-
+      labels = [
+        f"{CLASS_NAMES_DICT[class_id]} {confidence:.2f}"
+        for class_id, confidence in zip(detections.class_id, detections.confidence)
+      ]
+      
+      annotated_frame = box_annotator.annotate(
+        scene=frame,
+        detections=detections,
+        labels=labels,
+      )
+      
       cv2.imshow("YOLOv8 Inference", annotated_frame)
+      
+      # for label in labels:
+      #   print("LABELS: ",label)
       
       if cv2.waitKey(1) & 0xFF == ord("q"):
         break
