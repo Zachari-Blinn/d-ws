@@ -1,10 +1,27 @@
-from super_gradients.training import models
-from super_gradients.common.object_names import Models
+from pymongo import MongoClient
+from ultralytics import YOLO
+from datetime import datetime
+import os
+from dotenv import load_dotenv
 
-model = models.get(Models.YOLO_NAS_M, pretrained_weights="coco")
+load_dotenv()
 
-out = model.predict("/home/zachari-blinn/Projects/other/d-ws/object-detection-module/data/test/living_room.jpg", conf=0.6)
+CONFIDENCE_THRESHOLD = 0.7
+MODEL_PATH = "yolov8n.pt"
+SOURCE = "0"
+MONGO_URI = "mongodb://root:example@localhost:27017/"
+DB_NAME = os.getenv('DB_NAME')
+COLLECTION_NAME = os.getenv('COLLECTION_NAME')
 
-print(out)
+client = MongoClient(MONGO_URI)
+db = client[DB_NAME]
+objects_collection = db[COLLECTION_NAME]
 
-out.show()
+def main():
+  model = YOLO(MODEL_PATH)
+  results = model.predict(source=SOURCE, show=True, conf=CONFIDENCE_THRESHOLD, stream=True)
+  for result in results:
+    print(result)
+      
+if __name__ == "__main__":
+  main()
