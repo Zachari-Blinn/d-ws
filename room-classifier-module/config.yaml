@@ -1,0 +1,3 @@
+model_file: room_classifier.pkl
+db_name: mydatabase
+collection_name: mycollection
