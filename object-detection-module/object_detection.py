@@ -1,8 +1,9 @@
+from datetime import datetime
+from dotenv import load_dotenv
 from pymongo import MongoClient
 from ultralytics import YOLO
-from datetime import datetime
+import cv2
 import os
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -19,9 +20,28 @@ objects_collection = db[COLLECTION_NAME]
 
 def main():
   model = YOLO(MODEL_PATH)
-  results = model.predict(source=SOURCE, show=True, conf=CONFIDENCE_THRESHOLD, stream=True)
-  for result in results:
-    print(result)
+  camera = cv2.VideoCapture(0)
+  
+  while camera.isOpened():
+    success, frame = camera.read()
+    
+    if success:
+      results = model(frame)
       
+      cls = results[0].boxes.cls
+      print(cls)
+
+      annotated_frame = results[0].plot()
+
+      cv2.imshow("YOLOv8 Inference", annotated_frame)
+      
+      if cv2.waitKey(1) & 0xFF == ord("q"):
+        break
+    else:
+      break
+  
+  camera.release()
+  cv2.destroyAllWindows()
+  
 if __name__ == "__main__":
   main()
