@@ -9,7 +9,6 @@ import joblib
 import logging
 import os
 import spacy
-import yaml
 
 load_dotenv()
 
