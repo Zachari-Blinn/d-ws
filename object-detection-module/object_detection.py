@@ -1,6 +1,6 @@
 from datetime import datetime
 from dotenv import load_dotenv
-from pymongo import MongoClient
+from pymongo import MongoClient, IndexModel, ASCENDING
 from ultralytics import YOLO
 import cv2
 import os
@@ -17,11 +17,15 @@ MONGO_URI = "mongodb://root:example@localhost:27017/"
 DB_NAME = os.getenv('DB_NAME')
 COLLECTION_NAME = os.getenv('COLLECTION_NAME')
 TIME_BETWEEN_SAVES = 5  # seconds
+TIME_TO_LIVE_DATA = 2*24*60*60  # seconds
 
 # Database setup
 client = MongoClient(MONGO_URI)
 db = client[DB_NAME]
 objects_collection = db[COLLECTION_NAME]
+# Create a TTL index on the "datetime" field with an expiration of 2 days
+index = IndexModel([("datetime", ASCENDING)], expireAfterSeconds=TIME_TO_LIVE_DATA)
+objects_collection.create_indexes([index])
 
 def process_frame(frame, model, box_annotator, saved_objects, last_saved_time):
   results = model.track(frame)[0]
